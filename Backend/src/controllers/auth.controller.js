@@ -2,15 +2,21 @@ import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config.js";
 
-async function sendTokenResponse(user, res) {
-    const token = jwt.sign({ 
-        id: user._id 
-    }, config.JWT_SECRET, 
+async function sendTokenResponse(user, res, message) {
+  const token = jwt.sign(
     {
-        expiresIn: '3d'
-    });
+      id: user._id,
+    },
+    config.JWT_SECRET,
+    {
+      expiresIn: "3d",
+    },
+  );
 
-    return res.status(201).json({
+  res.cookie("token", token);
+
+  return res.status(201).json({
+    message,
     success: true,
     token,
     user: {
@@ -23,37 +29,28 @@ async function sendTokenResponse(user, res) {
   });
 }
 
-
 export const register = async (req, res) => {
+  const { email, contact, password, fullname, isSeller } = req.body;
 
-    const { email, contact, password, fullname, role } = req.body;
-
-    try {
-        
-        const existingUser = await userModel.findOne({
-            $or: [
-                { email }, 
-                { contact }
-            ]
-        });
-        if (existingUser) {
-            return res.status(400).json({ message: "User already exists" });
-        }   
-
-        const user = await userModel.create({
-            email,
-            contact,
-            password,
-            fullname,
-            role
-        });
-
-        
-
-        return sendTokenResponse(user, res);
-
-    } catch (error) {
-        console.error("Error checking existing user:", error);
-        return res.status(500).json({ message: "Server error" });
+  try {
+    const existingUser = await userModel.findOne({
+      $or: [{ email }, { contact }],
+    });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
     }
+
+    const user = await userModel.create({
+      email,
+      contact,
+      password,
+      fullname,
+      role: isSeller ? "seller" : "buyer",
+    });
+
+    await sendTokenResponse(user, res, "User registered successfully");
+  } catch (error) {
+    console.error("Error checking existing user:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
 };
