@@ -1,0 +1,12 @@
+
+create an register form with input fields, contact number, full name, email, password, and an flag isSeller with check box  also add an continue with google option.
+
+   the design i want is simpl, minimle and seamless with ample amount of breathing space 
+
+  theme color is golden yellow with dark theme 
+
+use tailwind css for styling  
+
+use stitch tool for ui design creation.
+
+make sure the design is responsive
