@@ -5,14 +5,27 @@ import cookieParser from 'cookie-parser';
 import connectDB from './config/db.js';
 import authRoutes from './routes/auth.routes.js';
 import cors from 'cors';
+import passport from 'passport';
+import {Strategy as GoogleStrategy} from 'passport-google-oauth20';
+import { config } from './config/config.js';
 
 dotenv.config();
 
 const app = express();
-app.use(cors({
-  origin: 'http://localhost:5173', 
-  methiods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true, 
+// app.use(cors({
+//   origin: 'http://localhost:5173', 
+//   methiods: ['GET', 'POST', 'PUT', 'DELETE'],
+//   credentials: true, 
+// }));
+
+app.use(passport.initialize());
+
+passport.use(new GoogleStrategy({
+  clientID: config.GOOGLE_CLIENT_ID,
+  clientSecret: config.GOOGLE_CLIENT_SECRET,
+  callbackURL: "/api/auth/google/callback"
+}, async (accessToken, refreshToken, profile, done) => {
+  return done(null, profile);
 }));
 
 
