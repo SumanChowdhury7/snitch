@@ -21,8 +21,6 @@ export const validatePost = [
   body("priceCurrency")
     .notEmpty()
     .withMessage("Price currency is required"),
-    body("images")
-    .isArray({ min: 1 })
-    .withMessage("At least one image is required"),
+    
   validateRequest,
 ];
