@@ -99,3 +99,21 @@ res.cookie("token", token);
 res.redirect("http://localhost:5173/");
   
 }
+
+export const getMe = async (req, res) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  res.status(200).json({ 
+    message: "User fetched successfully",
+    success: true,
+    user: {
+      id: user._id,
+      email: user.email,
+      contact: user.contact,
+      fullname: user.fullname,
+      role: user.role,
+    }
+  });
+};

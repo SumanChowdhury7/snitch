@@ -38,3 +38,14 @@ export async function login(userData) {
         throw error;
    }
 }
+
+export async function getMe() {
+
+   try {
+        const response = await authApiInstance.get("/me");
+        return response.data;
+   } catch (error) {
+        console.log(error.response?.data);
+        throw error;
+   }
+}
