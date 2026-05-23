@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router';
 import { useProduct } from '../hook/useProduct';
 import { useSelector } from 'react-redux';
+import EditProduct from './EditProduct';
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'INR'];
 const MAX_IMAGES = 7;
@@ -51,10 +52,7 @@ const Dashboard = () => {
   });
   const [editExistingImages, setEditExistingImages] = useState([]);
   const [editNewImages, setEditNewImages] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
-
-  const fileInputRef = useRef(null);
-
+ 
   useEffect(() => {
     handleGetSellerProducts();
   }, []);
@@ -83,87 +81,6 @@ const Dashboard = () => {
     setEditNewImages([]);
   };
 
-  // Handle Edit Input Change
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Handle New File Addition in Edit
-  const addEditFiles = (files) => {
-    const slots = MAX_IMAGES - (editExistingImages.length + editNewImages.length);
-    if (slots <= 0) return;
-
-    const valid = Array.from(files)
-      .filter((f) => f.type.startsWith('image/'))
-      .slice(0, slots);
-
-    setEditNewImages((prev) => [
-      ...prev,
-      ...valid.map((f) => ({
-        file: f,
-        url: URL.createObjectURL(f),
-      })),
-    ]);
-  };
-
-  const handleEditFileChange = (e) => addEditFiles(e.target.files);
-
-  const handleEditDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    addEditFiles(e.dataTransfer.files);
-  };
-
-  // Remove Existing Image in Edit
-  const removeExistingImage = (idx) => {
-    setEditExistingImages((prev) => prev.filter((_, i) => i !== idx));
-  };
-
-  // Remove New Image in Edit
-  const removeNewImage = (idx) => {
-    setEditNewImages((prev) => {
-      URL.revokeObjectURL(prev[idx].url);
-      return prev.filter((_, i) => i !== idx);
-    });
-  };
-
-  // Submit Edited Product
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-
-    if (editExistingImages.length + editNewImages.length === 0) {
-      alert('Please keep or upload at least one image.');
-      return;
-    }
-
-    const data = new FormData();
-    data.append('title', editFormData.title);
-    data.append('description', editFormData.description);
-    data.append('priceAmount', editFormData.priceAmount);
-    data.append('priceCurrency', editFormData.priceCurrency);
-    // Send existing images array as a JSON string to keep them
-    data.append('existingImages', JSON.stringify(editExistingImages));
-
-    // Append new files
-    editNewImages.forEach((img) => {
-      data.append('images', img.file);
-    });
-
-    const result = await handleUpdateProduct(editingProduct._id, data);
-    if (result) {
-      alert('Product updated successfully!');
-      setEditingProduct(null);
-      // Revoke temp URLs
-      editNewImages.forEach((img) => URL.revokeObjectURL(img.url));
-      setEditNewImages([]);
-    } else {
-      alert('Failed to update product. Please check details and try again.');
-    }
-  };
 
   // Confirm Product Deletion
   const confirmDelete = async () => {
@@ -486,281 +403,18 @@ const Dashboard = () => {
       {/* ============================================================== */}
       {/* 1. EDIT PRODUCT GLASS MODAL */}
       {/* ============================================================== */}
-      {editingProduct && (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div
-            style={glassStyle}
-            className="w-full max-w-[1100px] max-h-[90vh] rounded-[30px] overflow-hidden flex flex-col relative animate-fade-in shadow-[0_25px_60px_rgba(0,0,0,0.8)]"
-          >
-            {/* Top accent line */}
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-[#FFD700]" />
-
-            {/* Modal Header */}
-            <div className="px-6 py-5 border-b border-white/[0.05] bg-[#0c0c0c] flex items-center justify-between">
-              <div>
-                <h3 className="text-[19px] font-black tracking-wide text-white">Edit Product Showcase</h3>
-                <p className="text-[11px] text-[#9f988c] uppercase tracking-wider mt-1">
-                  Editing: {editingProduct.title}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditingProduct(null)}
-                className="w-8 h-8 rounded-full bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.05] flex items-center justify-center text-[#c8bea5] hover:text-white transition-all duration-300"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-6 md:p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                
-                {/* Form fields */}
-                <div className="space-y-6">
-                  {/* Title */}
-                  <div>
-                    <label htmlFor="edit-title" className={labelCls}>
-                      Product Title
-                    </label>
-                    <input
-                      id="edit-title"
-                      type="text"
-                      name="title"
-                      value={editFormData.title}
-                      onChange={handleEditChange}
-                      required
-                      className={inputCls}
-                      placeholder="Product Title"
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <label htmlFor="edit-description" className={labelCls}>
-                      Description
-                    </label>
-                    <textarea
-                      id="edit-description"
-                      name="description"
-                      value={editFormData.description}
-                      onChange={handleEditChange}
-                      required
-                      rows={5}
-                      className={`${inputCls} resize-none`}
-                      placeholder="Describe fit, material, styling notes..."
-                    />
-                  </div>
-
-                  {/* Price */}
-                  <div>
-                    <label className={labelCls}>Pricing</label>
-                    <div className="grid grid-cols-[1fr_120px] gap-4">
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#FFD700] font-semibold text-sm">
-                          {currencySymbols[editFormData.priceCurrency]}
-                        </span>
-                        <input
-                          id="edit-priceAmount"
-                          type="number"
-                          name="priceAmount"
-                          value={editFormData.priceAmount}
-                          onChange={handleEditChange}
-                          required
-                          min="0"
-                          step="0.01"
-                          className={`${inputCls} pl-10`}
-                          placeholder="0.00"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <select
-                          id="edit-priceCurrency"
-                          name="priceCurrency"
-                          value={editFormData.priceCurrency}
-                          onChange={handleEditChange}
-                          className={`${inputCls} appearance-none pr-9 cursor-pointer`}
-                        >
-                          {CURRENCIES.map((c) => (
-                            <option key={c} value={c} className="bg-[#181818]">
-                              {c}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#c8bea5]">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path
-                              fillRule="evenodd"
-                              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Images management */}
-                <div className="flex flex-col">
-                  <div className="flex items-center justify-between mb-3">
-                    <label className={labelCls}>Showcase Media</label>
-                    <div className="px-3 py-1 rounded-full text-[11px] font-semibold bg-white/[0.05] text-[#c8bea5]">
-                      {editExistingImages.length + editNewImages.length}/{MAX_IMAGES}
-                    </div>
-                  </div>
-
-                  {/* Dropzone */}
-                  <div
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setIsDragging(true);
-                    }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={handleEditDrop}
-                    onClick={() => !atMaxImages && fileInputRef.current?.click()}
-                    className={[
-                      'group relative overflow-hidden border rounded-[24px] px-5 py-6 transition-all duration-300 text-center',
-                      atMaxImages ? 'opacity-40 pointer-events-none' : 'cursor-pointer',
-                      isDragging
-                        ? 'border-[#FFD700] bg-[#FFD700]/5 shadow-[0_0_30px_rgba(255,215,0,0.08)]'
-                        : 'border-[#2d2d2d] bg-[#141414]/80 hover:border-[#FFD700]/40',
-                    ].join(' ')}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/3 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative z-10 flex flex-col items-center">
-                      <div className="w-11 h-11 rounded-xl flex items-center justify-center border border-white/[0.06] bg-white/[0.03] text-[#666] group-hover:text-[#FFD700] transition-colors duration-300">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={1.5}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
-                      </div>
-                      <h4 className="mt-3 text-[14px] font-bold text-[#f5f1e8]">Upload Additional Media</h4>
-                      <p className="mt-1 text-[11.5px] text-[#9b9487]">Drag and drop or click to browse files</p>
-                    </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      className="hidden"
-                      onChange={handleEditFileChange}
-                    />
-                  </div>
-
-                  {/* Image grid */}
-                  <div className="mt-6 flex-1 flex flex-col justify-end">
-                    <p className="text-[10px] uppercase tracking-wider text-[#666] mb-3">Active Visuals</p>
-                    
-                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 max-h-[220px] overflow-y-auto pr-1">
-                      
-                      {/* Existing Uploaded Images */}
-                      {editExistingImages.map((img, idx) => (
-                        <div
-                          key={`exist-${idx}`}
-                          className="relative aspect-square rounded-xl overflow-hidden border border-[#2d2d2d] bg-[#141414] group"
-                        >
-                          <img
-                            src={img.url}
-                            alt={`exist-${idx}`}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center" />
-                          <button
-                            type="button"
-                            onClick={() => removeExistingImage(idx)}
-                            className="absolute top-1 right-1 w-5.5 h-5.5 rounded-full bg-black/80 backdrop-blur-md flex items-center justify-center text-[#ffb4ab] opacity-0 group-hover:opacity-100 hover:text-white transition-all"
-                            title="Remove image"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
-                          {idx === 0 && (
-                            <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-md bg-[#FFD700] text-[#3d3200] text-[8px] font-black tracking-wide">
-                              COVER
-                            </span>
-                          )}
-                        </div>
-                      ))}
-
-                      {/* New Locally Staged Images */}
-                      {editNewImages.map((img, idx) => (
-                        <div
-                          key={`new-${idx}`}
-                          className="relative aspect-square rounded-xl overflow-hidden border border-[#FFD700]/30 bg-[#141414] group"
-                        >
-                          <img
-                            src={img.url}
-                            alt={`new-${idx}`}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity" />
-                          <button
-                            type="button"
-                            onClick={() => removeNewImage(idx)}
-                            className="absolute top-1 right-1 w-5.5 h-5.5 rounded-full bg-black/80 backdrop-blur-md flex items-center justify-center text-[#ffb4ab] opacity-0 group-hover:opacity-100 hover:text-white transition-all"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
-                              <path
-                                fillRule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          </button>
-                          <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-md bg-[#FFD700]/25 text-[#FFD700] text-[8px] font-black border border-[#FFD700]/30 tracking-wide">
-                            STAGED
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Form Buttons */}
-              <div className="mt-10 pt-6 border-t border-white/[0.05] flex flex-col sm:flex-row items-center justify-end gap-4">
-                <button
-                  type="button"
-                  onClick={() => setEditingProduct(null)}
-                  className="w-full sm:w-auto px-7 py-3.5 rounded-2xl border border-white/[0.08] text-[13px] font-bold tracking-[0.1em] uppercase text-[#c8bea5] hover:bg-white/[0.03] transition-all"
-                >
-                  Discard Changes
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full sm:w-auto px-9 py-3.5 rounded-2xl bg-[#FFD700] text-[13px] font-bold tracking-[0.12em] uppercase text-[#2d2400] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 disabled:opacity-60"
-                >
-                  {loading ? 'Saving Design...' : 'Save Product Listing'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <EditProduct
+  editingProduct={editingProduct}
+  setEditingProduct={setEditingProduct}
+  editFormData={editFormData}
+  setEditFormData={setEditFormData}
+  editExistingImages={editExistingImages}
+  setEditExistingImages={setEditExistingImages}
+  editNewImages={editNewImages}
+  setEditNewImages={setEditNewImages}
+  handleUpdateProduct={handleUpdateProduct}
+  loading={loading}
+/>
 
       {/* ============================================================== */}
       {/* 2. DELETE CONFIRMATION GLASS MODAL */}
