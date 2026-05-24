@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
 import { useProduct } from '../hook/useProduct';
 
@@ -14,13 +14,12 @@ const currencySymbols = {
 
 const ProductsDashboard = () => {
   const { handleGetAllProducts } = useProduct();
+  const navigate = useNavigate();
 
-  // REDUX STATE
   const { allProducts = [], loading } = useSelector(
     (state) => state.product
   );
 
-  // LOCAL UI STATE
   const [search, setSearch] = useState('');
   const [currentImages, setCurrentImages] = useState({});
 
@@ -28,21 +27,24 @@ const ProductsDashboard = () => {
     handleGetAllProducts();
   }, []);
 
-  // SEARCH FILTER
+  // FILTER
   const filteredProducts = allProducts.filter((product) =>
-    product.title.toLowerCase().includes(search.toLowerCase())
+    product.title
+      .toLowerCase()
+      .includes(search.toLowerCase())
   );
 
-  // PRICE FORMATTER
+  // PRICE FORMAT
   const formatPrice = (price) => {
-    const symbol = currencySymbols[price?.currency] || '₹';
+    const symbol =
+      currencySymbols[price?.currency] || '₹';
 
-    return `${symbol}${Number(price?.amount || 0).toLocaleString(
-      'en-IN'
-    )}`;
+    return `${symbol}${Number(
+      price?.amount || 0
+    ).toLocaleString('en-IN')}`;
   };
 
-  // IMAGE PREV
+  // PREV IMAGE
   const handlePrevImage = (product) => {
     setCurrentImages((prev) => ({
       ...prev,
@@ -53,251 +55,304 @@ const ProductsDashboard = () => {
     }));
   };
 
-  // IMAGE NEXT
+  // NEXT IMAGE
   const handleNextImage = (product) => {
     setCurrentImages((prev) => ({
       ...prev,
       [product._id]:
-        (prev[product._id] || 0) === product.images.length - 1
+        (prev[product._id] || 0) ===
+        product.images.length - 1
           ? 0
           : (prev[product._id] || 0) + 1,
     }));
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0b0b] text-white">
-      
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+
       {/* NAVBAR */}
-      <header className="sticky top-0 z-50 border-b border-[#1f1f1f] bg-[#0b0b0b]/95 backdrop-blur">
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
-          
+      <header className="sticky top-0 z-50 h-16 border-b border-[#181818] bg-[#0a0a0a]/95 backdrop-blur-xl">
+
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 h-full flex items-center justify-between">
+
+          {/* LOGO */}
           <Link
             to="/"
-            className="text-[22px] font-black tracking-[0.3em]"
+            className="text-[22px] font-black tracking-[0.35em]"
           >
             SNITCH
           </Link>
 
+          {/* NAV */}
           <div className="hidden md:flex items-center gap-8">
+
             <Link
               to="/"
-              className="text-sm text-[#a1a1a1] hover:text-[#FFD000] transition"
+              className="text-sm text-[#7d7d7d] hover:text-[#FFD000] transition"
             >
               Home
             </Link>
 
             <Link
               to="/wishlist"
-              className="text-sm text-[#a1a1a1] hover:text-[#FFD000] transition"
+              className="text-sm text-[#7d7d7d] hover:text-[#FFD000] transition"
             >
               Wishlist
             </Link>
 
             <Link
               to="/cart"
-              className="text-sm text-[#a1a1a1] hover:text-[#FFD000] transition"
+              className="text-sm text-[#7d7d7d] hover:text-[#FFD000] transition"
             >
               Cart
             </Link>
+
           </div>
+
         </div>
+
       </header>
 
       {/* HERO */}
-      <section className="max-w-[1600px] mx-auto px-6 lg:px-10 pt-12 pb-4">
-        
-        <div className="max-w-[700px]">
-          <p className="text-[#FFD000] uppercase tracking-[0.3em] text-xs font-semibold">
-            New Collection
-          </p>
+      <section className="max-w-[1600px] mx-auto px-6 lg:px-10 pt-10 pb-8">
 
-          <h1 className="mt-4 text-4xl md:text-5xl font-black leading-[0.95]">
-            Discover Premium Fashion
-          </h1>
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
 
-          <p className="mt-6 text-[#8d8d8d] text-sm md:text-base leading-relaxed">
-            Explore curated streetwear, luxury essentials,
-            and modern fits crafted for contemporary fashion lovers.
-          </p>
+          {/* LEFT */}
+          <div className="max-w-[650px]">
+
+            <p className="text-[#FFD000] text-xs uppercase tracking-[0.3em] font-semibold">
+              New Collection
+            </p>
+
+            <h1 className="mt-4 text-4xl md:text-5xl font-black leading-[1]">
+              Modern Fashion
+            </h1>
+
+            <p className="mt-5 text-[#7d7d7d] leading-[1.9] text-sm md:text-base">
+              Minimal essentials crafted for contemporary
+              streetwear and luxury fashion lovers.
+            </p>
+
+          </div>
+
+          {/* SEARCH */}
+          <div className="w-full lg:w-[380px]">
+
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={search}
+              onChange={(e) =>
+                setSearch(e.target.value)
+              }
+              className="w-full h-14 rounded-2xl bg-[#111111] border border-[#1b1b1b] px-5 text-sm outline-none focus:border-[#FFD000] transition-all duration-300"
+            />
+
+          </div>
+
         </div>
 
-        {/* SEARCH */}
-        <div className="mt-8 max-w-[420px]">
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full h-14 bg-[#111111] border border-[#1f1f1f] rounded-2xl px-5 text-sm outline-none focus:border-[#FFD000] transition"
-          />
-        </div>
       </section>
 
       {/* PRODUCTS */}
       <section className="max-w-[1600px] mx-auto px-6 lg:px-10 pb-20">
-        
-        {/* TOP BAR */}
-        <div className="flex items-center justify-between mb-10">
+
+        {/* TOP */}
+        <div className="flex items-center justify-between mb-8">
+
           <h2 className="text-2xl font-bold">
             Products
           </h2>
 
-          <p className="text-sm text-[#7d7d7d]">
+          <p className="text-sm text-[#666]">
             {filteredProducts.length} Items
           </p>
+
         </div>
 
         {/* LOADING */}
         {loading ? (
+
           <div className="h-[400px] flex items-center justify-center">
-            <div className="w-10 h-10 border-2 border-[#2a2a2a] border-t-[#FFD000] rounded-full animate-spin" />
+
+            <div className="w-10 h-10 rounded-full border-2 border-[#222] border-t-[#FFD000] animate-spin" />
+
           </div>
+
         ) : filteredProducts.length === 0 ? (
 
-          <div className="h-[400px] border border-[#1f1f1f] rounded-[32px] flex flex-col items-center justify-center text-center">
-            <h3 className="text-2xl font-bold">
+          <div className="h-[350px] rounded-[32px] border border-[#181818] bg-[#101010] flex flex-col items-center justify-center text-center">
+
+            <h3 className="text-3xl font-bold">
               No Products Found
             </h3>
 
-            <p className="mt-3 text-sm text-[#7d7d7d]">
-              Try searching something else.
+            <p className="mt-3 text-sm text-[#777]">
+              Try searching another keyword.
             </p>
+
           </div>
 
         ) : (
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-7">
-            
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5">
+
             {filteredProducts.map((product) => (
+
               <div
                 key={product._id}
-                className="group border border-[#1f1f1f] rounded-[28px] overflow-hidden bg-[#101010] hover:border-[#2d2d2d] hover:-translate-y-1 transition-all duration-300"
+                onClick={() =>
+                  navigate(`/product/${product._id}`)
+                }
+                className="group cursor-pointer"
               >
 
-                {/* IMAGE SLIDER */}
-                <div className="aspect-[3/4] overflow-hidden bg-[#151515] relative">
+                {/* CARD */}
+                <div className="rounded-[28px] border border-[#181818] bg-[#101010] overflow-hidden hover:border-[#2c2c2c] transition-all duration-300">
 
-                  <div
-                    className="flex h-full w-full transition-transform duration-500"
-                    style={{
-                      transform: `translateX(-${
-                        (currentImages[product._id] || 0) * 100
-                      }%)`,
-                    }}
-                  >
-                    {product.images?.map((img) => (
-                      <img
-                        key={img._id}
-                        src={img.url}
-                        alt={product.title}
-                        className="min-w-full h-full object-cover flex-shrink-0"
-                      />
-                    ))}
-                  </div>
+                  {/* IMAGE */}
+                  <div className="relative aspect-[3/4] overflow-hidden bg-[#151515]">
 
-                  {/* LEFT */}
-                  {product.images?.length > 1 && (
-                    <button
-                      onClick={() => handlePrevImage(product)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur border border-[#2a2a2a] flex items-center justify-center text-white hover:border-[#FFD000] hover:text-[#FFD000] transition"
+                    {/* IMAGE SLIDER */}
+                    <div
+                      className="flex h-full w-full transition-transform duration-500"
+                      style={{
+                        transform: `translateX(-${
+                          (currentImages[product._id] || 0) *
+                          100
+                        }%)`,
+                      }}
                     >
-                      ←
-                    </button>
-                  )}
 
-                  {/* RIGHT */}
-                  {product.images?.length > 1 && (
-                    <button
-                      onClick={() => handleNextImage(product)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 backdrop-blur border border-[#2a2a2a] flex items-center justify-center text-white hover:border-[#FFD000] hover:text-[#FFD000] transition"
-                    >
-                      →
-                    </button>
-                  )}
-
-                  {/* DOTS */}
-                  {product.images?.length > 1 && (
-                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
-                      {product.images.map((_, idx) => (
-                        <div
-                          key={idx}
-                          className={`h-2 rounded-full transition-all ${
-                            (currentImages[product._id] || 0) === idx
-                              ? 'w-6 bg-[#FFD000]'
-                              : 'w-2 bg-white/40'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {/* PRICE */}
-                  <div className="absolute top-4 left-4 bg-[#0d0d0d]/90 border border-[#2a2a2a] backdrop-blur px-4 py-2 rounded-xl">
-                    <p className="text-[#FFD000] text-sm font-bold">
-                      {formatPrice(product.price)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* CONTENT */}
-                <div className="p-5">
-
-                  {/* TITLE */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="text-lg font-bold">
-                        {product.title}
-                      </h3>
-                    </div>
-
-                    <button className="w-10 h-10 rounded-full border border-[#2a2a2a] flex items-center justify-center hover:border-[#FFD000] hover:text-[#FFD000] transition">
-                      ♥
-                    </button>
-                  </div>
-
-                  {/* DESCRIPTION */}
-                  <p className="mt-4 text-sm text-[#8d8d8d] leading-relaxed line-clamp-2">
-                    {product.description}
-                  </p>
-
-                  {/* BUTTONS */}
-                  <div className="mt-6 flex items-center gap-3">
-                    
-                    <button className="flex-1 h-12 rounded-2xl bg-[#FFD000] text-black text-sm font-bold hover:opacity-90 transition">
-                      Add to Cart
-                    </button>
-
-                    <button className="h-12 px-5 rounded-2xl border border-[#2a2a2a] text-sm hover:border-[#FFD000] hover:text-[#FFD000] transition">
-                      View
-                    </button>
-                  </div>
-
-                  {/* FOOTER */}
-                  <div className="mt-5 pt-5 border-t border-[#1a1a1a] flex items-center justify-between">
-
-                    <p className="text-[11px] uppercase tracking-wider text-[#666]">
-                      {new Date(product.createdAt).toLocaleDateString()}
-                    </p>
-
-                    <div className="flex items-center gap-2">
-                      {product.images?.slice(0, 3).map((img) => (
+                      {product.images?.map((img) => (
                         <img
                           key={img._id}
                           src={img.url}
-                          alt=""
-                          className="w-8 h-8 rounded-full object-cover border border-[#2a2a2a]"
+                          alt={product.title}
+                          className="min-w-full h-full object-cover flex-shrink-0 group-hover:scale-[1.03] transition-transform duration-500"
                         />
                       ))}
+
                     </div>
+
+                    {/* PRICE */}
+                    <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-xl border border-[#2a2a2a] px-3 py-1.5 rounded-xl">
+
+                      <p className="text-[#FFD000] text-xs font-semibold">
+                        {formatPrice(product.price)}
+                      </p>
+
+                    </div>
+
+                    {/* PREV */}
+                    {product.images?.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePrevImage(product);
+                        }}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/70 backdrop-blur-xl border border-[#2a2a2a] flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300"
+                      >
+                        ←
+                      </button>
+                    )}
+
+                    {/* NEXT */}
+                    {product.images?.length > 1 && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNextImage(product);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/70 backdrop-blur-xl border border-[#2a2a2a] flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300"
+                      >
+                        →
+                      </button>
+                    )}
+
+                  </div>
+
+                  {/* CONTENT */}
+                  <div className="p-4">
+
+                    {/* TITLE + HEART */}
+                    <div className="flex items-start justify-between gap-3">
+
+                      <div>
+
+                        <h3 className="text-[15px] md:text-base font-semibold leading-snug line-clamp-1">
+                          {product.title}
+                        </h3>
+
+                        <p className="mt-1 text-xs text-[#666] uppercase tracking-[0.2em]">
+                          Premium Fashion
+                        </p>
+
+                      </div>
+
+                      <button
+                        onClick={(e) =>
+                          e.stopPropagation()
+                        }
+                        className="w-9 h-9 rounded-full border border-[#242424] flex items-center justify-center text-sm hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300"
+                      >
+                        ♥
+                      </button>
+
+                    </div>
+
+                    {/* DESCRIPTION */}
+                    <p className="mt-4 text-sm text-[#8b8b8b] leading-relaxed line-clamp-2">
+                      {product.description}
+                    </p>
+
+                    {/* FOOTER */}
+                    <div className="mt-5 flex items-center justify-between">
+
+                      {/* DOTS */}
+                      {product.images?.length > 1 ? (
+                        <div className="flex items-center gap-1.5">
+
+                          {product.images.map((_, idx) => (
+                            <div
+                              key={idx}
+                              className={`rounded-full transition-all duration-300 ${
+                                (currentImages[
+                                  product._id
+                                ] || 0) === idx
+                                  ? 'w-5 h-1.5 bg-[#FFD000]'
+                                  : 'w-1.5 h-1.5 bg-[#555]'
+                              }`}
+                            />
+                          ))}
+
+                        </div>
+                      ) : (
+                        <div />
+                      )}
+
+                      {/* BUTTON */}
+                      <button className="h-10 px-4 rounded-xl bg-[#FFD000] text-black text-xs font-bold hover:opacity-90 transition-all duration-300">
+                        View
+                      </button>
+
+                    </div>
+
                   </div>
 
                 </div>
+
               </div>
+
             ))}
 
           </div>
+
         )}
+
       </section>
+
     </div>
   );
 };
