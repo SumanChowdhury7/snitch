@@ -1,42 +1,45 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router';
-import { useProduct } from '../hook/useProduct';
-import { useSelector } from 'react-redux';
-import EditProduct from './EditProduct';
+import React, { useEffect, useState, useRef } from "react";
+import { useNavigate, Link } from "react-router";
+import { useProduct } from "../hook/useProduct";
+import { useSelector } from "react-redux";
+import EditProduct from "./EditProduct";
 
-const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CNY', 'INR'];
+const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "CNY", "INR"];
 const MAX_IMAGES = 7;
 
 const currencySymbols = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  JPY: '¥',
-  CNY: '¥',
-  INR: '₹',
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  JPY: "¥",
+  CNY: "¥",
+  INR: "₹",
 };
 
 const inputCls =
-  'w-full bg-[#181818]/90 border border-[#2d2d2d] rounded-2xl px-4 py-3 text-[#f5f1e8] placeholder-[#666] ' +
-  'focus:border-[#FFD700] focus:ring-4 focus:ring-[#FFD700]/10 outline-none transition-all duration-300 text-sm';
+  "w-full bg-[#181818]/90 border border-[#2d2d2d] rounded-2xl px-4 py-3 text-[#f5f1e8] placeholder-[#666] " +
+  "focus:border-[#FFD700] focus:ring-4 focus:ring-[#FFD700]/10 outline-none transition-all duration-300 text-sm";
 
 const labelCls =
-  'block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d0c6ab] mb-2';
+  "block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d0c6ab] mb-2";
 
 const glassStyle = {
   background:
-    'linear-gradient(180deg, rgba(22,22,22,0.92) 0%, rgba(14,14,14,0.95) 100%)',
-  backdropFilter: 'blur(24px)',
-  WebkitBackdropFilter: 'blur(24px)',
-  border: '1px solid rgba(255,255,255,0.06)',
+    "linear-gradient(180deg, rgba(22,22,22,0.92) 0%, rgba(14,14,14,0.95) 100%)",
+  backdropFilter: "blur(24px)",
+  WebkitBackdropFilter: "blur(24px)",
+  border: "1px solid rgba(255,255,255,0.06)",
   boxShadow:
-    '0 10px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03)',
+    "0 10px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03)",
 };
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { handleGetSellerProducts, handleUpdateProduct, handleDeleteProduct } = useProduct();
-  const { sellerProducts = [], loading } = useSelector((state) => state.product);
+  const { handleGetSellerProducts, handleUpdateProduct, handleDeleteProduct } =
+    useProduct();
+  const { sellerProducts = [], loading } = useSelector(
+    (state) => state.product,
+  );
   const { user } = useSelector((state) => state.auth);
 
   // Modal and Interactive States
@@ -45,23 +48,23 @@ const Dashboard = () => {
 
   // Edit Form State
   const [editFormData, setEditFormData] = useState({
-    title: '',
-    description: '',
-    priceAmount: '',
-    priceCurrency: 'INR',
+    title: "",
+    description: "",
+    priceAmount: "",
+    priceCurrency: "INR",
   });
   const [editExistingImages, setEditExistingImages] = useState([]);
   const [editNewImages, setEditNewImages] = useState([]);
- 
+
   useEffect(() => {
     handleGetSellerProducts();
   }, []);
 
   // Format Currency Utility
   const formatPrice = (priceObj) => {
-    if (!priceObj) return '₹0.00';
-    const symbol = currencySymbols[priceObj.currency] || '₹';
-    const amount = Number(priceObj.amount || 0).toLocaleString('en-IN', {
+    if (!priceObj) return "₹0.00";
+    const symbol = currencySymbols[priceObj.currency] || "₹";
+    const amount = Number(priceObj.amount || 0).toLocaleString("en-IN", {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -74,33 +77,35 @@ const Dashboard = () => {
     setEditFormData({
       title: product.title,
       description: product.description,
-      priceAmount: product.price?.amount || '',
-      priceCurrency: product.price?.currency || 'INR',
+      priceAmount: product.price?.amount || "",
+      priceCurrency: product.price?.currency || "INR",
     });
     setEditExistingImages(product.images || []);
     setEditNewImages([]);
   };
-
 
   // Confirm Product Deletion
   const confirmDelete = async () => {
     if (!deletingProduct) return;
     const result = await handleDeleteProduct(deletingProduct._id);
     if (result) {
-      alert('Listing removed successfully!');
+      alert("Listing removed successfully!");
       setDeletingProduct(null);
     } else {
-      alert('Failed to delete listing. Please try again.');
+      alert("Failed to delete listing. Please try again.");
     }
   };
 
   // Aggregate Stats
-  const totalValue = sellerProducts.reduce((sum, p) => sum + (p.price?.amount || 0), 0);
-  const atMaxImages = editExistingImages.length + editNewImages.length >= MAX_IMAGES;
+  const totalValue = sellerProducts.reduce(
+    (sum, p) => sum + (p.price?.amount || 0),
+    0,
+  );
+  const atMaxImages =
+    editExistingImages.length + editNewImages.length >= MAX_IMAGES;
 
   return (
     <div className="min-h-screen bg-[#0c0c0c] text-[#f5f1e8] font-sans relative overflow-x-hidden pb-16">
-      
       {/* Background Ambient Glow */}
       <div className="absolute top-[-150px] left-[-150px] w-[350px] h-[350px] bg-[#FFD700]/10 blur-[130px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[10%] right-[-100px] w-[350px] h-[350px] bg-[#FFD700]/5 blur-[130px] rounded-full pointer-events-none" />
@@ -115,8 +120,12 @@ const Dashboard = () => {
         <nav className="h-full max-w-[1500px] mx-auto px-6 md:px-10 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="leading-none">
-              <h1 className="text-[22px] font-black tracking-[0.25em]">SNITCH</h1>
-              <p className="text-[9px] uppercase tracking-[0.25em] text-[#6f6a5f] mt-1">Creator Studio</p>
+              <h1 className="text-[22px] font-black tracking-[0.25em]">
+                SNITCH
+              </h1>
+              <p className="text-[9px] uppercase tracking-[0.25em] text-[#6f6a5f] mt-1">
+                Creator Studio
+              </p>
             </Link>
           </div>
 
@@ -150,7 +159,6 @@ const Dashboard = () => {
 
       {/* MAIN CONTAINER */}
       <main className="max-w-[1500px] mx-auto px-6 md:px-10 mt-10 relative z-10">
-        
         {/* HERO TITLE HEADER */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 pb-6 border-b border-white/[0.04]">
           <div>
@@ -161,14 +169,14 @@ const Dashboard = () => {
               Seller Dashboard
             </h2>
             <p className="mt-2.5 text-[14px] text-[#9f988c] max-w-[500px]">
-              Manage and showcase your high-fashion collection. Upload designs, update listings, and track your boutique stats.
+              Manage and showcase your high-fashion collection. Upload designs,
+              update listings, and track your boutique stats.
             </p>
           </div>
         </div>
 
         {/* HERO STATS OVERVIEW BAR */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          
           {/* Stat 1: Total Listings */}
           <div
             style={glassStyle}
@@ -200,7 +208,7 @@ const Dashboard = () => {
             </p>
             <div className="flex items-baseline justify-between mt-3">
               <span className="text-[34px] font-black text-white leading-none">
-                {currencySymbols.INR} {totalValue.toLocaleString('en-IN')}
+                {currencySymbols.INR} {totalValue.toLocaleString("en-IN")}
               </span>
               <span className="text-[11px] text-[#c8bea5] font-semibold uppercase tracking-widest">
                 INR
@@ -237,7 +245,9 @@ const Dashboard = () => {
         {/* PRODUCTS SECTION CONTAINER */}
         <section>
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-[20px] font-bold tracking-wide text-white">Your Collection</h3>
+            <h3 className="text-[20px] font-bold tracking-wide text-white">
+              Your Collection
+            </h3>
             <span className="text-[12px] text-[#c8bea5] font-semibold tracking-wider bg-white/[0.04] px-4.5 py-1.5 rounded-full border border-white/[0.06]">
               {sellerProducts.length} Items Listed
             </span>
@@ -247,10 +257,11 @@ const Dashboard = () => {
           {loading && sellerProducts.length === 0 ? (
             <div className="h-[350px] rounded-[30px] border border-white/[0.06] bg-white/[0.01] flex flex-col items-center justify-center text-center">
               <div className="w-10 h-10 border-2 border-[#FFD700]/20 border-t-[#FFD700] rounded-full animate-spin mb-4" />
-              <p className="text-[13px] text-[#9f988c] uppercase tracking-[0.2em]">Synchronizing Showcase...</p>
+              <p className="text-[13px] text-[#9f988c] uppercase tracking-[0.2em]">
+                Synchronizing Showcase...
+              </p>
             </div>
           ) : sellerProducts.length === 0 ? (
-            
             /* GORGEOUS EMPTY STATE */
             <div
               style={glassStyle}
@@ -271,9 +282,13 @@ const Dashboard = () => {
                   />
                 </svg>
               </div>
-              <h4 className="text-[22px] font-bold text-white tracking-wide">No Listings Found</h4>
+              <h4 className="text-[22px] font-bold text-white tracking-wide">
+                No Listings Found
+              </h4>
               <p className="mt-2.5 text-[14px] text-[#9f988c] max-w-[360px] mx-auto leading-relaxed">
-                Your portfolio is currently blank. Take your place in our premium designer marketplace by listing your first apparel masterpiece.
+                Your portfolio is currently blank. Take your place in our
+                premium designer marketplace by listing your first apparel
+                masterpiece.
               </p>
               <Link
                 to="/seller/create-product"
@@ -283,17 +298,17 @@ const Dashboard = () => {
               </Link>
             </div>
           ) : (
-            
             /* PRODUCTS SHOWCASE GRID */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
               {sellerProducts.map((product) => {
                 const coverImg =
                   product.images && product.images[0]
                     ? product.images[0].url
-                    : 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop';
+                    : "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=800&auto=format&fit=crop";
 
                 return (
                   <div
+                    
                     key={product._id}
                     style={glassStyle}
                     className="rounded-[28px] overflow-hidden group hover:border-[#FFD700]/30 transition-all duration-500 flex flex-col h-full hover:shadow-[0_15px_35px_rgba(0,0,0,0.55)] relative"
@@ -306,7 +321,7 @@ const Dashboard = () => {
                         className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-[600ms]"
                         loading="lazy"
                       />
-                      
+
                       {/* Price Badge */}
                       <div className="absolute bottom-4 left-4 rounded-xl bg-black/75 backdrop-blur-md px-3.5 py-2 border border-white/[0.08] text-[13px] font-black text-[#FFD700] tracking-wide shadow-lg">
                         {formatPrice(product.price)}
@@ -321,29 +336,35 @@ const Dashboard = () => {
                     {/* Product Content Details */}
                     <div className="p-5 flex-1 flex flex-col justify-between">
                       <div>
-                        <h4 className="text-[17px] font-extrabold text-white tracking-wide truncate group-hover:text-[#FFD700] transition-colors duration-300">
+                        <h4 
+                        onClick={() => {
+                      navigate(`/seller/product/${product?._id || ""}`);
+                    }}
+                        className="text-[17px] cursor-pointer font-extrabold text-white tracking-wide truncate group-hover:text-[#FFD700] transition-colors duration-300">
                           {product.title}
                         </h4>
-                        
+
                         <p className="mt-2 text-[12.5px] leading-relaxed text-[#9b9487] line-clamp-3">
                           {product.description}
                         </p>
                       </div>
 
                       <div className="mt-6 pt-4.5 border-t border-white/[0.04] flex items-center justify-between">
-                        
                         {/* Creation Date */}
                         <div className="text-[10px] uppercase tracking-wider text-[#666]">
-                          Listed: {new Date(product.createdAt).toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                          })}
+                          Listed:{" "}
+                          {new Date(product.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            },
+                          )}
                         </div>
 
                         {/* EDIT AND DELETE ACTIONS */}
                         <div className="flex items-center gap-2">
-                          
                           {/* Edit Button */}
                           <button
                             type="button"
@@ -404,17 +425,17 @@ const Dashboard = () => {
       {/* 1. EDIT PRODUCT GLASS MODAL */}
       {/* ============================================================== */}
       <EditProduct
-  editingProduct={editingProduct}
-  setEditingProduct={setEditingProduct}
-  editFormData={editFormData}
-  setEditFormData={setEditFormData}
-  editExistingImages={editExistingImages}
-  setEditExistingImages={setEditExistingImages}
-  editNewImages={editNewImages}
-  setEditNewImages={setEditNewImages}
-  handleUpdateProduct={handleUpdateProduct}
-  loading={loading}
-/>
+        editingProduct={editingProduct}
+        setEditingProduct={setEditingProduct}
+        editFormData={editFormData}
+        setEditFormData={setEditFormData}
+        editExistingImages={editExistingImages}
+        setEditExistingImages={setEditExistingImages}
+        editNewImages={editNewImages}
+        setEditNewImages={setEditNewImages}
+        handleUpdateProduct={handleUpdateProduct}
+        loading={loading}
+      />
 
       {/* ============================================================== */}
       {/* 2. DELETE CONFIRMATION GLASS MODAL */}
@@ -426,7 +447,7 @@ const Dashboard = () => {
             className="w-full max-w-[500px] rounded-[28px] overflow-hidden p-6 md:p-8 relative shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-red-500/20"
           >
             <div className="absolute top-0 left-0 w-full h-[2px] bg-red-500" />
-            
+
             {/* Warning Icon Banner */}
             <div className="w-12 h-12 rounded-2xl border border-red-500/25 bg-red-500/5 flex items-center justify-center text-red-400 mb-5">
               <svg
@@ -445,10 +466,15 @@ const Dashboard = () => {
               </svg>
             </div>
 
-            <h3 className="text-[20px] font-black text-white tracking-wide leading-tight">Remove Product Showcase?</h3>
-            
+            <h3 className="text-[20px] font-black text-white tracking-wide leading-tight">
+              Remove Product Showcase?
+            </h3>
+
             <p className="mt-3 text-[14px] leading-relaxed text-[#9b9487]">
-              Are you sure you want to permanently delete <strong className="text-white">"{deletingProduct.title}"</strong>? This listing will be completely removed from your Snitch boutique store. This process is irreversible.
+              Are you sure you want to permanently delete{" "}
+              <strong className="text-white">"{deletingProduct.title}"</strong>?
+              This listing will be completely removed from your Snitch boutique
+              store. This process is irreversible.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-end gap-3.5">

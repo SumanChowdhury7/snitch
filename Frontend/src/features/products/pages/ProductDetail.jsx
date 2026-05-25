@@ -17,20 +17,42 @@ const ProductDetail = () => {
   const [product, setProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
 
+  const [selectedVariant, setSelectedVariant] =
+    useState(null);
+
+  const [selectedAttributes, setSelectedAttributes] =
+    useState({});
+
   const { handleGetProductDetails } = useProduct();
 
   async function fetchProductDetails() {
     try {
-      const data = await handleGetProductDetails(ProductId);
+      const data = await handleGetProductDetails(
+        ProductId
+      );
+
       setProduct(data);
     } catch (error) {
-      console.error('Error fetching product details:', error);
+      console.error(
+        'Error fetching product details:',
+        error
+      );
     }
   }
 
   useEffect(() => {
     fetchProductDetails();
   }, [ProductId]);
+
+  useEffect(() => {
+    if (product?.variants?.length > 0) {
+      setSelectedVariant(product.variants[0]);
+
+      setSelectedAttributes(
+        product.variants[0].attributes || {}
+      );
+    }
+  }, [product]);
 
   const formatPrice = (price) => {
     const symbol =
@@ -39,6 +61,66 @@ const ProductDetail = () => {
     return `${symbol}${Number(
       price?.amount || 0
     ).toLocaleString('en-IN')}`;
+  };
+
+  const currentData = selectedVariant || product;
+
+  const displayImages =
+    currentData?.images?.length > 0
+      ? currentData.images
+      : product?.images || [];
+
+  const displayPrice =
+    currentData?.price?.amount
+      ? currentData.price
+      : product?.price;
+
+  const displayTitle =
+    currentData?.title || product?.title;
+
+  const displayDescription =
+    currentData?.description ||
+    product?.description;
+
+  const allAttributes = {};
+
+  product?.variants?.forEach((variant) => {
+    Object.entries(
+      variant.attributes || {}
+    ).forEach(([key, value]) => {
+      if (!allAttributes[key]) {
+        allAttributes[key] = new Set();
+      }
+
+      allAttributes[key].add(value);
+    });
+  });
+
+  const handleSelectAttribute = (
+    attributeKey,
+    attributeValue
+  ) => {
+    const updatedAttributes = {
+      ...selectedAttributes,
+      [attributeKey]: attributeValue,
+    };
+
+    setSelectedAttributes(updatedAttributes);
+
+    const matchedVariant =
+      product?.variants?.find((variant) => {
+        return Object.entries(
+          updatedAttributes
+        ).every(
+          ([key, value]) =>
+            variant.attributes?.[key] === value
+        );
+      });
+
+    if (matchedVariant) {
+      setSelectedVariant(matchedVariant);
+      setActiveImage(0);
+    }
   };
 
   if (!product) {
@@ -64,6 +146,7 @@ const ProductDetail = () => {
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
+
             <Link
               to="/"
               className="text-sm text-[#8d8d8d] hover:text-[#FFD000] transition"
@@ -84,6 +167,7 @@ const ProductDetail = () => {
             >
               Cart
             </Link>
+
           </div>
 
         </div>
@@ -108,11 +192,11 @@ const ProductDetail = () => {
             {/* THUMBNAILS */}
             <div className="flex flex-col gap-4">
 
-              {product.images?.map((img, idx) => (
+              {displayImages?.map((img, idx) => (
                 <button
-                  key={img._id}
+                  key={idx}
                   onClick={() => setActiveImage(idx)}
-                  className={`w-[90px] h-[110px] rounded-2xl overflow-hidden border transition-all duration-300 flex-shrink-0 ${
+                  className={`w-[90px] h-[110px] rounded-2xl overflow-hidden border transition-all duration-300 flex-shrink-0 cursor-pointer ${
                     activeImage === idx
                       ? 'border-[#FFD000]'
                       : 'border-[#1f1f1f]'
@@ -132,38 +216,41 @@ const ProductDetail = () => {
             <div className="relative flex-1 overflow-hidden rounded-[34px] border border-[#1c1c1c] bg-[#111111] group">
 
               <img
-                src={product.images?.[activeImage]?.url}
-                alt={product.title}
+                src={
+                  displayImages?.[activeImage]?.url
+                }
+                alt={displayTitle}
                 className="w-full h-[420px] md:h-[520px] xl:h-[580px] object-cover"
               />
 
               {/* PREV BUTTON */}
-              {product.images?.length > 1 && (
+              {displayImages?.length > 1 && (
                 <button
                   onClick={() =>
                     setActiveImage((prev) =>
                       prev === 0
-                        ? product.images.length - 1
+                        ? displayImages.length - 1
                         : prev - 1
                     )
                   }
-                  className="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/60 backdrop-blur-xl border border-[#2a2a2a] flex items-center justify-center text-white opacity-0 group-hover:opacity-100 hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300"
+                  className="absolute left-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/60 backdrop-blur-xl border border-[#2a2a2a] flex items-center justify-center text-white opacity-0 group-hover:opacity-100 hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300 cursor-pointer"
                 >
                   ←
                 </button>
               )}
 
               {/* NEXT BUTTON */}
-              {product.images?.length > 1 && (
+              {displayImages?.length > 1 && (
                 <button
                   onClick={() =>
                     setActiveImage((prev) =>
-                      prev === product.images.length - 1
+                      prev ===
+                      displayImages.length - 1
                         ? 0
                         : prev + 1
                     )
                   }
-                  className="absolute right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/60 backdrop-blur-xl border border-[#2a2a2a] flex items-center justify-center text-white opacity-0 group-hover:opacity-100 hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300"
+                  className="absolute right-5 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/60 backdrop-blur-xl border border-[#2a2a2a] flex items-center justify-center text-white opacity-0 group-hover:opacity-100 hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300 cursor-pointer"
                 >
                   →
                 </button>
@@ -172,7 +259,7 @@ const ProductDetail = () => {
               {/* PRICE TAG */}
               <div className="absolute top-5 left-5 bg-black/70 backdrop-blur-xl border border-[#2a2a2a] rounded-2xl px-5 py-3">
                 <p className="text-[#FFD000] font-bold text-lg">
-                  {formatPrice(product.price)}
+                  {formatPrice(displayPrice)}
                 </p>
               </div>
 
@@ -190,53 +277,116 @@ const ProductDetail = () => {
 
             {/* TITLE */}
             <h1 className="mt-5 text-4xl md:text-5xl xl:text-6xl font-black leading-[1]">
-              {product.title}
+              {displayTitle}
             </h1>
 
             {/* DESCRIPTION */}
             <p className="mt-8 text-[#8b8b8b] text-[15px] md:text-base leading-[1.9] max-w-[650px]">
-              {product.description}
+              {displayDescription}
             </p>
 
             {/* DIVIDER */}
             <div className="mt-10 border-t border-[#1a1a1a]" />
 
-            {/* SIZE */}
-            <div className="mt-10">
+            {/* VARIANT ATTRIBUTES */}
+            <div className="mt-10 space-y-8">
 
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-sm uppercase tracking-[0.2em] text-[#777]">
-                  Select Size
-                </h3>
+              {Object.entries(allAttributes).map(
+                ([attributeKey, values]) => (
+                  <div key={attributeKey}>
 
-                <button className="text-sm text-[#8d8d8d] hover:text-[#FFD000] transition">
-                  Size Guide
-                </button>
-              </div>
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="text-sm uppercase tracking-[0.2em] text-[#777]">
+                        Select {attributeKey}
+                      </h3>
+                    </div>
 
-              <div className="flex flex-wrap gap-4">
+                    <div className="flex flex-wrap gap-4">
 
-                {['S', 'M', 'L', 'XL'].map((size) => (
-                  <button
-                    key={size}
-                    className="w-16 h-16 rounded-2xl border border-[#1f1f1f] bg-[#111111] hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300"
-                  >
-                    {size}
-                  </button>
-                ))}
+                      {[...values].map((value) => {
+                        const isActive =
+                          selectedAttributes?.[
+                            attributeKey
+                          ] === value;
 
-              </div>
+                        return (
+                          <button
+                            key={value}
+                            onClick={() =>
+                              handleSelectAttribute(
+                                attributeKey,
+                                value
+                              )
+                            }
+                            className={`px-6 h-14 rounded-2xl border transition-all duration-300 capitalize cursor-pointer ${
+                              isActive
+                                ? 'border-[#FFD000] bg-[#FFD000] text-black'
+                                : 'border-[#1f1f1f] bg-[#111111] hover:border-[#FFD000] hover:text-[#FFD000]'
+                            }`}
+                          >
+                            {value}
+                          </button>
+                        );
+                      })}
+
+                    </div>
+
+                  </div>
+                )
+              )}
 
             </div>
+
+            {/* SELECTED VARIANT INFO */}
+            {selectedVariant && (
+              <div className="mt-10 rounded-[28px] border border-[#1f1f1f] bg-[#111111] p-6">
+
+                <div className="flex items-center justify-between flex-wrap gap-4">
+
+                  <div>
+                    <p className="text-[#777] text-sm">
+                      Selected Variant
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 mt-3">
+
+                      {Object.entries(
+                        selectedVariant.attributes || {}
+                      ).map(([key, value]) => (
+                        <div
+                          key={key}
+                          className="px-4 py-2 rounded-xl bg-[#1a1a1a] border border-[#2a2a2a] text-sm capitalize"
+                        >
+                          {key}: {value}
+                        </div>
+                      ))}
+
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-[#777] text-sm">
+                      Available Stock
+                    </p>
+
+                    <h3 className="text-3xl font-black text-[#FFD000] mt-1">
+                      {selectedVariant.stock || 0}
+                    </h3>
+                  </div>
+
+                </div>
+
+              </div>
+            )}
 
             {/* BUTTONS */}
             <div className="mt-12 flex flex-col sm:flex-row gap-4">
 
-              <button className="flex-1 h-14 rounded-2xl bg-[#FFD000] text-black font-bold hover:opacity-90 transition-all duration-300">
+              <button className="flex-1 h-14 rounded-2xl bg-[#FFD000] text-black font-bold hover:opacity-90 transition-all duration-300 cursor-pointer">
                 Add To Cart
               </button>
 
-              <button className="h-14 px-8 rounded-2xl border border-[#2a2a2a] hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300">
+              <button className="h-14 px-8 rounded-2xl border border-[#2a2a2a] hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300 cursor-pointer">
                 ♥ Wishlist
               </button>
 
@@ -246,6 +396,7 @@ const ProductDetail = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-14">
 
               <div className="rounded-[28px] border border-[#1f1f1f] bg-[#111111] p-6">
+
                 <p className="text-2xl">🚚</p>
 
                 <h4 className="mt-5 font-semibold">
@@ -255,9 +406,11 @@ const ProductDetail = () => {
                 <p className="mt-2 text-sm text-[#777] leading-relaxed">
                   Delivery within 3-5 working days.
                 </p>
+
               </div>
 
               <div className="rounded-[28px] border border-[#1f1f1f] bg-[#111111] p-6">
+
                 <p className="text-2xl">🔒</p>
 
                 <h4 className="mt-5 font-semibold">
@@ -267,9 +420,11 @@ const ProductDetail = () => {
                 <p className="mt-2 text-sm text-[#777] leading-relaxed">
                   Encrypted and safe checkout process.
                 </p>
+
               </div>
 
               <div className="rounded-[28px] border border-[#1f1f1f] bg-[#111111] p-6">
+
                 <p className="text-2xl">↩</p>
 
                 <h4 className="mt-5 font-semibold">
@@ -279,6 +434,7 @@ const ProductDetail = () => {
                 <p className="mt-2 text-sm text-[#777] leading-relaxed">
                   Hassle free replacement available.
                 </p>
+
               </div>
 
             </div>
@@ -293,6 +449,7 @@ const ProductDetail = () => {
               <div className="mt-7 space-y-6">
 
                 <div className="flex items-center justify-between border-b border-[#1b1b1b] pb-5">
+
                   <span className="text-[#777]">
                     Product ID
                   </span>
@@ -300,9 +457,11 @@ const ProductDetail = () => {
                   <span className="font-medium text-sm">
                     {product._id}
                   </span>
+
                 </div>
 
                 <div className="flex items-center justify-between border-b border-[#1b1b1b] pb-5">
+
                   <span className="text-[#777]">
                     Uploaded
                   </span>
@@ -312,16 +471,19 @@ const ProductDetail = () => {
                       product.createdAt
                     ).toLocaleDateString()}
                   </span>
+
                 </div>
 
                 <div className="flex items-center justify-between">
+
                   <span className="text-[#777]">
                     Images
                   </span>
 
                   <span className="font-medium text-sm">
-                    {product.images?.length}
+                    {displayImages?.length}
                   </span>
+
                 </div>
 
               </div>
