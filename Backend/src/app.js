@@ -9,6 +9,7 @@ import cors from 'cors';
 import passport from 'passport';
 import {Strategy as GoogleStrategy} from 'passport-google-oauth20';
 import { config } from './config/config.js';
+import cartRoutes from './routes/cart.routes.js';
 
 dotenv.config();
 
@@ -45,6 +46,6 @@ app.get('/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
-
+app.use('/api/cart', cartRoutes);
 
 export default app;

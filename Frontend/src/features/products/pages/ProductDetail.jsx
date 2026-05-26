@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useProduct } from '../hook/useProduct';
+import { useCart } from '../../cart/hook/useCart';
 
 const currencySymbols = {
   USD: '$',
@@ -24,7 +25,7 @@ const ProductDetail = () => {
     useState({});
 
   const { handleGetProductDetails } = useProduct();
-
+  const { handleAddItem } = useCart();
   async function fetchProductDetails() {
     try {
       const data = await handleGetProductDetails(
@@ -382,7 +383,14 @@ const ProductDetail = () => {
             {/* BUTTONS */}
             <div className="mt-12 flex flex-col sm:flex-row gap-4">
 
-              <button className="flex-1 h-14 rounded-2xl bg-[#FFD000] text-black font-bold hover:opacity-90 transition-all duration-300 cursor-pointer">
+              <button
+              onClick={()=>{
+                handleAddItem({
+                  productId: product._id,
+                  variantId: selectedVariant?._id,
+                })
+              }}
+              className="flex-1 h-14 rounded-2xl bg-[#FFD000] text-black font-bold hover:opacity-90 transition-all duration-300 cursor-pointer">
                 Add To Cart
               </button>
 
