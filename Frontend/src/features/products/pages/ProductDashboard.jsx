@@ -70,48 +70,6 @@ const ProductsDashboard = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
 
-      {/* NAVBAR */}
-      <header className="sticky top-0 z-50 h-16 border-b border-[#181818] bg-[#0a0a0a]/95 backdrop-blur-xl">
-
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-10 h-full flex items-center justify-between">
-
-          {/* LOGO */}
-          <Link
-            to="/"
-            className="text-[22px] font-black tracking-[0.35em]"
-          >
-            SNITCH
-          </Link>
-
-          {/* NAV */}
-          <div className="hidden md:flex items-center gap-8">
-
-            <Link
-              to="/"
-              className="text-sm text-[#7d7d7d] hover:text-[#FFD000] transition"
-            >
-              Home
-            </Link>
-
-            <Link
-              to="/wishlist"
-              className="text-sm text-[#7d7d7d] hover:text-[#FFD000] transition"
-            >
-              Wishlist
-            </Link>
-
-            <Link
-              to="/cart"
-              className="text-sm text-[#7d7d7d] hover:text-[#FFD000] transition"
-            >
-              Cart
-            </Link>
-
-          </div>
-
-        </div>
-
-      </header>
 
       {/* HERO */}
       <section className="max-w-[1600px] mx-auto px-6 lg:px-10 pt-10 pb-8">

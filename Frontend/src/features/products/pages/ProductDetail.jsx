@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useParams, useNavigate } from 'react-router';
+import { useSelector } from 'react-redux';
 import { useProduct } from '../hook/useProduct';
 import { useCart } from '../../cart/hook/useCart';
 
@@ -14,6 +15,8 @@ const currencySymbols = {
 
 const ProductDetail = () => {
   const { ProductId } = useParams();
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.auth.user);
 
   const [product, setProduct] = useState(null);
   const [activeImage, setActiveImage] = useState(0);
@@ -24,8 +27,27 @@ const ProductDetail = () => {
   const [selectedAttributes, setSelectedAttributes] =
     useState({});
 
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   const { handleGetProductDetails } = useProduct();
   const { handleAddItem } = useCart();
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    try {
+      await handleAddItem({
+        productId: product._id,
+        variantId: selectedVariant?._id,
+      });
+      setShowSuccessModal(true);
+    } catch (error) {
+      console.error('Failed to add item to cart:', error);
+    }
+  };
   async function fetchProductDetails() {
     try {
       const data = await handleGetProductDetails(
@@ -135,44 +157,7 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white overflow-hidden">
 
-      {/* NAVBAR */}
-      <header className="sticky top-0 z-50 border-b border-[#1a1a1a] bg-[#0a0a0a]/90 backdrop-blur-xl">
-        <div className="max-w-[1600px] mx-auto h-16 px-6 lg:px-10 flex items-center justify-between">
-
-          <Link
-            to="/"
-            className="text-[22px] font-black tracking-[0.35em]"
-          >
-            SNITCH
-          </Link>
-
-          <div className="hidden md:flex items-center gap-8">
-
-            <Link
-              to="/"
-              className="text-sm text-[#8d8d8d] hover:text-[#FFD000] transition"
-            >
-              Home
-            </Link>
-
-            <Link
-              to="/wishlist"
-              className="text-sm text-[#8d8d8d] hover:text-[#FFD000] transition"
-            >
-              Wishlist
-            </Link>
-
-            <Link
-              to="/cart"
-              className="text-sm text-[#8d8d8d] hover:text-[#FFD000] transition"
-            >
-              Cart
-            </Link>
-
-          </div>
-
-        </div>
-      </header>
+  
 
       {/* MAIN SECTION */}
       <section className="max-w-[1500px] mx-auto px-6 lg:px-10 pt-5 pb-10">
@@ -384,12 +369,7 @@ const ProductDetail = () => {
             <div className="mt-12 flex flex-col sm:flex-row gap-4">
 
               <button
-              onClick={()=>{
-                handleAddItem({
-                  productId: product._id,
-                  variantId: selectedVariant?._id,
-                })
-              }}
+              onClick={handleAddToCart}
               className="flex-1 h-14 rounded-2xl bg-[#FFD000] text-black font-bold hover:opacity-90 transition-all duration-300 cursor-pointer">
                 Add To Cart
               </button>
@@ -503,6 +483,149 @@ const ProductDetail = () => {
         </div>
 
       </section>
+
+      {/* SUCCESS MODAL */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            onClick={() => setShowSuccessModal(false)}
+            className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity duration-300"
+          />
+
+          {/* Modal Content */}
+          <div className="relative w-full max-w-[460px] bg-[#101010] border border-[#1f1f1f] rounded-[28px] p-8 text-center shadow-2xl z-10 transition-all duration-300 scale-100">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowSuccessModal(false)}
+              className="absolute top-6 right-6 text-[#7d7d7d] hover:text-white transition duration-300 cursor-pointer text-lg"
+            >
+              ✕
+            </button>
+
+            {/* Checkmark Icon */}
+            <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-[#FFD000] rounded-full flex items-center justify-center text-3xl mx-auto mb-6">
+              ✓
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-black tracking-widest uppercase">
+              ADDED TO BAG
+            </h2>
+            <p className="text-xs text-[#7d7d7d] tracking-wider mt-2">
+              This item is now saved in your premium shopping selection.
+            </p>
+
+            {/* Item details card */}
+            <div className="mt-8 flex items-center gap-5 p-4 rounded-2xl bg-[#151515] border border-[#222222] text-left">
+              <div className="w-[60px] aspect-[3/4] rounded-xl overflow-hidden bg-[#1f1f1f] border border-[#2a2a2a] flex-shrink-0">
+                <img 
+                  src={displayImages?.[activeImage]?.url} 
+                  alt="" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-sm text-white tracking-wide truncate">
+                  {displayTitle}
+                </h4>
+                
+                {/* Attributes */}
+                {selectedVariant && Object.entries(selectedVariant.attributes || {}).length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-1.5">
+                    {Object.entries(selectedVariant.attributes || {}).map(([key, value]) => (
+                      <span key={key} className="text-[9px] uppercase tracking-wider text-[#888] bg-black/40 border border-[#222] px-2 py-0.5 rounded-md">
+                        {key}: <strong className="text-white font-semibold">{value}</strong>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
+                <p className="mt-2 text-[#FFD000] font-bold text-sm">
+                  {formatPrice(displayPrice)}
+                </p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-8 flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  navigate('/cart');
+                }}
+                className="w-full h-14 rounded-2xl bg-[#FFD000] text-black font-black text-xs tracking-widest hover:opacity-90 transition-all duration-300 cursor-pointer flex items-center justify-center"
+              >
+                VIEW BAG & CHECKOUT
+              </button>
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full h-14 rounded-2xl border border-[#222222] hover:border-white text-xs font-bold tracking-widest transition-all duration-300 cursor-pointer text-[#8d8d8d] hover:text-white uppercase"
+              >
+                CONTINUE SHOPPING
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* LOGIN REQUIRED MODAL */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            onClick={() => setShowLoginModal(false)}
+            className="absolute inset-0 bg-black/75 backdrop-blur-md transition-opacity duration-300"
+          />
+
+          {/* Modal Content */}
+          <div className="relative w-full max-w-[420px] bg-[#101010] border border-[#1f1f1f] rounded-[28px] p-8 text-center shadow-2xl z-10 transition-all duration-300 scale-100">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-6 right-6 text-[#7d7d7d] hover:text-white transition duration-300 cursor-pointer text-lg"
+            >
+              ✕
+            </button>
+
+            {/* Lock Icon */}
+            <div className="w-16 h-16 bg-[#FFD000]/10 border border-[#FFD000]/20 text-[#FFD000] rounded-full flex items-center justify-center text-2xl mx-auto mb-6">
+              🔑
+            </div>
+
+            {/* Title */}
+            <h2 className="text-xl font-black tracking-widest uppercase">
+              LOGIN REQUIRED
+            </h2>
+            <p className="text-xs text-[#7d7d7d] tracking-wider mt-2.5 leading-relaxed">
+              Please login to access your shopping bag and add luxury pieces to your cart.
+            </p>
+
+            {/* Action Buttons */}
+            <div className="mt-8 flex flex-col gap-3">
+              <button
+                onClick={() => {
+                  setShowLoginModal(false);
+                  navigate('/login');
+                }}
+                className="w-full h-14 rounded-2xl bg-[#FFD000] text-black font-black text-xs tracking-widest hover:opacity-90 transition-all duration-300 cursor-pointer flex items-center justify-center"
+              >
+                LOG IN TO CONTINUE
+              </button>
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="w-full h-14 rounded-2xl border border-[#222222] hover:border-white text-xs font-bold tracking-widest transition-all duration-300 cursor-pointer text-[#8d8d8d] hover:text-white uppercase"
+              >
+                BACK TO SHOP
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 };

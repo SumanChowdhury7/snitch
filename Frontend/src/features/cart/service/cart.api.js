@@ -5,12 +5,38 @@ const cartApiInstance = axios.create({
     withCredentials: true,
 });
 
-export const addItem = async ({productId, variantId}) => {
+export const addItem = async ({productId, variantId, quantity = 1}) => {
     try {
-        const response = await cartApiInstance.post(`/add/${productId}/${variantId}`,{quantity : 1});
+        const response = await cartApiInstance.post(`/add/${productId}/${variantId}`, { quantity });
         return response.data;
     } catch (error) {
         throw new Error(error.response?.data?.message || "Failed to add item to cart");
     }
 }
-    
+
+export const getCart = async () => {
+    try {
+        const response = await cartApiInstance.get('/');
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || "Failed to fetch cart");
+    }
+}
+
+export const updateItemQuantity = async ({productId, variantId, quantity}) => {
+    try {
+        const response = await cartApiInstance.put(`/update/${productId}/${variantId}`, { quantity });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || "Failed to update item quantity");
+    }
+}
+
+export const removeItem = async ({productId, variantId}) => {
+    try {
+        const response = await cartApiInstance.delete(`/remove/${productId}/${variantId}`);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || "Failed to remove item from cart");
+    }
+}
