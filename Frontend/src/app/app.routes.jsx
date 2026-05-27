@@ -35,9 +35,6 @@ export const routes = createBrowserRouter([
         path: "/cart",
         element: <CartItems />
     },
-    
-        ]
-    },
     {
         path: "/seller",
         children: [
@@ -55,5 +52,9 @@ export const routes = createBrowserRouter([
             }
         ]
     }
+    
+        ]
+    },
+    
    
 ]);

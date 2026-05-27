@@ -49,3 +49,13 @@ export async function getMe() {
         throw error;
    }
 }
+
+export async function logout() {
+   try {
+        const response = await authApiInstance.get("/logout");
+        return response.data;
+   } catch (error) {
+        console.log(error.response?.data);
+        throw error;
+   }
+}

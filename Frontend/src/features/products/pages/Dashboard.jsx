@@ -115,47 +115,6 @@ const Dashboard = () => {
         <div className="h-full w-[80%] bg-[#FFD700] shadow-[0_0_15px_#FFD700] transition-all duration-700" />
       </div>
 
-      {/* NAVBAR */}
-      <header className="h-16 border-b border-white/[0.05] bg-[#0f0f0f]/80 backdrop-blur-xl sticky top-0 z-50">
-        <nav className="h-full max-w-[1500px] mx-auto px-6 md:px-10 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/" className="leading-none">
-              <h1 className="text-[22px] font-black tracking-[0.25em]">
-                SNITCH
-              </h1>
-              <p className="text-[9px] uppercase tracking-[0.25em] text-[#6f6a5f] mt-1">
-                Creator Studio
-              </p>
-            </Link>
-          </div>
-
-          <div className="hidden md:flex items-center gap-8">
-            <span className="text-[12px] font-medium tracking-wide text-[#c8bea5] border-b border-[#FFD700] pb-1 text-[#FFD700]">
-              Dashboard
-            </span>
-            <Link
-              to="/seller/create-product"
-              className="text-[12px] font-medium tracking-wide text-[#c8bea5] hover:text-[#FFD700] transition-colors"
-            >
-              Add Listing
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {user && (
-              <span className="hidden sm:inline text-[11px] tracking-[0.15em] text-[#d0c6ab] uppercase">
-                {user.fullName || user.email}
-              </span>
-            )}
-            <Link
-              to="/seller/create-product"
-              className="flex items-center justify-center rounded-full border border-[#39342a] bg-[#171717] px-5 py-2 text-[12px] font-bold text-[#e6dcc3] hover:border-[#FFD700] hover:text-[#FFD700] transition-all duration-300 active:scale-95"
-            >
-              + Create Product
-            </Link>
-          </div>
-        </nav>
-      </header>
 
       {/* MAIN CONTAINER */}
       <main className="max-w-[1500px] mx-auto px-6 md:px-10 mt-10 relative z-10">
