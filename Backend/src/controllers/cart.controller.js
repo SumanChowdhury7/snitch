@@ -71,7 +71,61 @@ export const addToCart = async (req, res) => {
 
 export const getCart = async (req, res) => {
     const user = req.user;
-    let cart = await cartModel.findOne({ user: user._id }).populate('items.product')
+    let cart = await cartModel.aggregate(
+  [
+    {
+      $match: {
+        user: new mongoose.Types.ObjectId(user._id)
+      }
+    },
+    { $unwind: { path: '$items' } },
+    {
+      $lookup: {
+        from: 'products',
+        localField: 'items.product',
+        foreignField: '_id',
+        as: 'items.product'
+      }
+    },
+    { $unwind: { path: '$items.product' } },
+    {
+      $unwind: { path: '$items.product.variants' }
+    },
+    {
+      $match: {
+        $expr: {
+          $eq: [
+            '$items.variant',
+            '$items.product.variants._id'
+          ]
+        }
+      }
+    },
+    {
+      $addFields: {
+        itemprice: {
+          price: {
+            $multiply: [
+              '$items.quantity',
+              '$items.product.variants.price.amount'
+            ]
+          },
+          currency:
+            '$items.product.variants.price.currency'
+        }
+      }
+    },
+    {
+      $group: {
+        _id: '$_id',
+        totalPrice: { $sum: '$itemprice.price' },
+        currency: {
+          $first: '$itemprice.currency'
+        },
+        items: { $push: '$items' }
+      }
+    }
+  ])
 if (!cart) {
     cart = await cartModel.create({ user: user._id});
 }
