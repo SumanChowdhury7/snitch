@@ -48,14 +48,24 @@ const CartItems = () => {
       return {
         subtotal: 0,
         discount: 0,
+        priceDrop: 0,
         total: 0,
       };
 
-    const subtotal = cart.items.reduce((sum, item) => {
-      const price = item.price?.amount || 0;
-      return sum + price * item.quantity;
-    }, 0);
+    let priceDrop = 0;
 
+    const subtotal = cart.items.reduce((sum, item) => {
+      const variantObj = getVariantDetails(item);
+      const currentPrice = variantObj?.price?.amount ?? item.price?.amount ?? item.product?.price?.amount ?? 0;
+      const originalPrice = item.price?.amount || 0;
+
+      // Accumulate per-item savings
+      if (originalPrice > 0 && currentPrice < originalPrice) {
+        priceDrop += (originalPrice - currentPrice) * item.quantity;
+      }
+
+      return sum + currentPrice * item.quantity;
+    }, 0);
 
     let discount = 0;
 
@@ -65,13 +75,14 @@ const CartItems = () => {
       discount = subtotal * 0.15;
     }
 
-    const total = subtotal  - discount;
+    const total = subtotal - discount;
 
     const currency = cart.items[0]?.price?.currency || "INR";
 
     return {
       subtotal,
       discount,
+      priceDrop,
       total,
       currency,
     };
@@ -200,7 +211,15 @@ const CartItems = () => {
                   "/placeholder.png";
 
                 const itemPrice =
-                  item.price || variantObj?.price || item.product?.price;
+                  variantObj?.price || item.price || item.product?.price;
+
+                // Savings: if the current variant price is lower than what was stored
+                const originalAmount = item.price?.amount || 0;
+                const currentAmount = variantObj?.price?.amount ?? originalAmount;
+                const savingsPerUnit = originalAmount > 0 && currentAmount < originalAmount
+                  ? originalAmount - currentAmount
+                  : 0;
+                const currency = itemPrice?.currency || item.price?.currency || "INR";
 
                 const attributes = Object.entries(variantObj?.attributes || {});
 
@@ -320,9 +339,21 @@ const CartItems = () => {
                               Price per unit
                             </p>
 
-                            <h3 className="text-[22px] font-black tracking-tight text-white">
-                              {formatPrice(itemPrice)}
-                            </h3>
+                            <div className="flex flex-col items-end gap-1">
+                              {savingsPerUnit > 0 && (
+                                <span className="text-[11px] text-zinc-500 line-through">
+                                  {formatPrice({ amount: originalAmount, currency })}
+                                </span>
+                              )}
+                              <h3 className="text-[22px] font-black tracking-tight text-white">
+                                {formatPrice(itemPrice)}
+                              </h3>
+                              {savingsPerUnit > 0 && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-2.5 py-0.5">
+                                  🏷 You're saving {formatPrice({ amount: savingsPerUnit, currency })}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -360,6 +391,20 @@ const CartItems = () => {
                     })}
                   </span>
                 </div>
+
+                {totals.priceDrop > 0 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-1.5 text-emerald-400">
+                      <span>🏷</span> Price Drop Savings
+                    </span>
+                    <span className="font-semibold text-emerald-400">
+                      -{formatPrice({
+                        amount: totals.priceDrop,
+                        currency: totals.currency,
+                      })}
+                    </span>
+                  </div>
+                )}
 
                 {totals.discount > 0 && (
                   <div className="flex items-center justify-between text-sm text-emerald-400">

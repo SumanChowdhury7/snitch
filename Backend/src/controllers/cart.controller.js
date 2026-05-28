@@ -53,11 +53,13 @@ export const addToCart = async (req, res) => {
         });
     }
 
+    const variant = product.variants.id(variantId);
+
     cart.items.push({
         product: productId,
         variant: variantId,
         quantity,
-        price: product.price,
+        price: variant.price,
     });
     await cart.save();
 
