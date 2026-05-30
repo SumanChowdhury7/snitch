@@ -18,8 +18,8 @@ const Navbar = () => {
   const cart = useSelector(
     (state) => state.cart?.cart
   );
-
-  const cartItems = cart?.items || [];
+  const cartData = Array.isArray(cart) ? cart[0] : cart;
+  const cartItems = cartData?.items || [];
 
   const totalCartItems = cartItems.reduce(
     (total, item) => total + item.quantity,

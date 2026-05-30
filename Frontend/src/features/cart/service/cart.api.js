@@ -18,6 +18,7 @@ export const getCart = async () => {
     try {
         const response = await cartApiInstance.get('/');
         return response.data;
+        console.log(response.data);
     } catch (error) {
         throw new Error(error.response?.data?.message || "Failed to fetch cart");
     }

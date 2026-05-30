@@ -28,7 +28,6 @@ export const useCart = () => {
             const data = await getCart();
             // data.cart is the cart object returned from server
             dispatch(setCart(data.cart));
-            console.log("Cart fetched successfully:", data.cart);
             return data.cart;
         } catch (error) {
             dispatch(setError(error.message));

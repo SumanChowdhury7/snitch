@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useCart } from "../hook/useCart";
+import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 
 const currencySymbols = {
   USD: "$",
@@ -22,14 +23,45 @@ const CartItems = () => {
   } = useCart();
 
   const navigate = useNavigate();
-
+  const {error: razorpayError, isLoading, Razorpay} = useRazorpay();
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [promoError, setPromoError] = useState("");
 
+  const cartData = Array.isArray(cart) ? cart[0] : cart;
+  const cartItems = cartData?.items || [];
+
   useEffect(() => {
     handleGetCart();
   }, []);
+
+    const handlePayment = () => {
+    const options = {
+      key: "YOUR_RAZORPAY_KEY",
+      amount: 50000, // Amount in paise
+      currency: "INR",
+      name: "Test Company",
+      description: "Test Transaction",
+      order_id: "order_9A33XWu170gUtm", // Generate order_id on server
+      handler: (response) => {
+        console.log(response);
+        alert("Payment Successful!");
+      },
+      prefill: {
+        name: "John Doe",
+        email: "john.doe@example.com",
+        contact: "9999999999",
+      },
+      theme: {
+        color: "#F37254",
+      },
+    };
+
+    const razorpayInstance = new Razorpay(options);
+    razorpayInstance.open();
+  };
+
+      
 
   const formatPrice = (priceObj) => {
     const symbol = currencySymbols[priceObj?.currency] || "₹";
@@ -38,28 +70,34 @@ const CartItems = () => {
   };
 
   const getVariantDetails = (item) => {
-    if (!item?.product?.variants) return null;
+    const variants = item?.product?.variants;
+    if (!variants) return null;
 
-    return item.product.variants.find((v) => v._id === item.variant);
+    if (Array.isArray(variants)) {
+      return variants.find((v) => v._id?.toString() === item.variant?.toString());
+    }
+
+    return variants;
   };
 
   const getTotals = () => {
-    if (!cart?.items)
+    if (!cartItems.length)
       return {
         subtotal: 0,
         discount: 0,
         priceDrop: 0,
         total: 0,
+        currency: "INR",
       };
 
     let priceDrop = 0;
 
-    const subtotal = cart.items.reduce((sum, item) => {
+    const subtotal = cartItems.reduce((sum, item) => {
       const variantObj = getVariantDetails(item);
-      const currentPrice = variantObj?.price?.amount ?? item.price?.amount ?? item.product?.price?.amount ?? 0;
+      const currentPrice =
+        variantObj?.price?.amount ?? item.price?.amount ?? item.product?.price?.amount ?? 0;
       const originalPrice = item.price?.amount || 0;
 
-      // Accumulate per-item savings
       if (originalPrice > 0 && currentPrice < originalPrice) {
         priceDrop += (originalPrice - currentPrice) * item.quantity;
       }
@@ -75,9 +113,9 @@ const CartItems = () => {
       discount = subtotal * 0.15;
     }
 
-    const total = subtotal - discount;
-
-    const currency = cart.items[0]?.price?.currency || "INR";
+    const total = cartData?.totalPrice;
+    const currency =
+      cartData?.currency || cartItems[0]?.price?.currency || "INR";
 
     return {
       subtotal,
@@ -156,7 +194,7 @@ const CartItems = () => {
           </div>
 
           <p className="text-sm text-zinc-500">
-            {cart?.items?.length || 0} items
+            {cartItems.length} items
           </p>
         </div>
 
@@ -179,7 +217,7 @@ const CartItems = () => {
         )}
 
         {/* EMPTY */}
-        {!loading && (!cart || !cart.items || cart.items.length === 0) ? (
+        {!loading && cartItems.length === 0 ? (
           <div className="h-[500px] rounded-[32px] border border-white/5 bg-[#0b0b0b] flex flex-col items-center justify-center text-center">
             <div className="w-24 h-24 rounded-full border border-white/10 flex items-center justify-center text-4xl mb-8">
               👜
@@ -202,7 +240,7 @@ const CartItems = () => {
           <div className="grid grid-cols-1 xl:grid-cols-[1.6fr_0.75fr] gap-8 items-start">
             {/* LEFT */}
             <div className="space-y-4">
-              {cart?.items?.map((item) => {
+              {cartItems.map((item) => {
                 const variantObj = getVariantDetails(item);
 
                 const itemImage =
@@ -346,7 +384,7 @@ const CartItems = () => {
                                 </span>
                               )}
                               <h3 className="text-[22px] font-black tracking-tight text-white">
-                                {formatPrice(itemPrice)}
+                                {currentAmount > 0 ? formatPrice({ amount: currentAmount, currency }) : "Free"}
                               </h3>
                               {savingsPerUnit > 0 && (
                                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full px-2.5 py-0.5">
@@ -367,7 +405,9 @@ const CartItems = () => {
             <div className="sticky top-24 rounded-[28px] border border-white/8 bg-[#0b0b0b] p-7">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-zinc-600 mb-2">
+                  <p
+                  onclick={handlePayment}
+                  className="text-[11px] uppercase tracking-[0.3em] text-zinc-600 mb-2">
                     Checkout
                   </p>
 
@@ -392,7 +432,7 @@ const CartItems = () => {
                   </span>
                 </div>
 
-                {totals.priceDrop > 0 && (
+                {/* {totals.priceDrop > 0 && (
                   <div className="flex items-center justify-between text-sm">
                     <span className="flex items-center gap-1.5 text-emerald-400">
                       <span>🏷</span> Price Drop Savings
@@ -404,7 +444,7 @@ const CartItems = () => {
                       })}
                     </span>
                   </div>
-                )}
+                )} */}
 
                 {totals.discount > 0 && (
                   <div className="flex items-center justify-between text-sm text-emerald-400">
@@ -478,11 +518,7 @@ const CartItems = () => {
 
               {/* BUTTON */}
               <button
-                onClick={() => {
-                  alert(
-                    "Thank you for your order! Checkout integration is coming soon.",
-                  );
-                }}
+                onClick={handlePayment}
                 className="w-full h-14 rounded-2xl bg-[#FFD000] text-black font-black tracking-[0.2em] text-sm hover:scale-[1.01] active:scale-[0.99] transition-all"
               >
                 CHECKOUT
