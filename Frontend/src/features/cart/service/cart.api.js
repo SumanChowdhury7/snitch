@@ -41,3 +41,34 @@ export const removeItem = async ({productId, variantId}) => {
         throw new Error(error.response?.data?.message || "Failed to remove item from cart");
     }
 }
+
+export const createCartOrder = async () => {
+    try {
+        const response = await cartApiInstance.post('/payment/create/order');
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || "Failed to create order");
+    }
+}
+
+export const verifyCartOrder = async ({ razorpay_order_id, razorpay_payment_id, razorpay_signature }) => {
+    try {
+        const response = await cartApiInstance.post('/payment/verify/order', {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature
+        });
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || "Failed to verify order");
+    }                   
+}
+
+export const getOrderDetails = async (orderId) => {
+    try {
+        const response = await cartApiInstance.get(`/payment/order/${orderId}`);
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || "Failed to fetch order details");
+    }
+}

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useCart } from "../hook/useCart";
-import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
+import { useRazorpay } from "react-razorpay";
+import { useSelector } from "react-redux";
 
 const currencySymbols = {
   USD: "$",
@@ -20,7 +21,12 @@ const CartItems = () => {
     handleGetCart,
     handleUpdateItemQuantity,
     handleRemoveItem,
+    handleCreateCartOrder,
+    handleVerifyCartOrder
   } = useCart();
+  
+
+  const { user } = useSelector(state => state.auth);
 
   const navigate = useNavigate();
   const {error: razorpayError, isLoading, Razorpay} = useRazorpay();
@@ -35,31 +41,45 @@ const CartItems = () => {
     handleGetCart();
   }, []);
 
-    const handlePayment = () => {
-    const options = {
-      key: "YOUR_RAZORPAY_KEY",
-      amount: 50000, // Amount in paise
-      currency: "INR",
-      name: "Test Company",
+  async function handleCheckout() {
+    const response = await handleCreateCartOrder();
+    console.log("Order created:", response);
+
+     const options = {
+      key: "rzp_test_Svzie5lDpUqdyi",
+      amount: response.order.amount, // Amount in paise
+      currency: response.order.currency,
+      name: "Snitch",
       description: "Test Transaction",
-      order_id: "order_9A33XWu170gUtm", // Generate order_id on server
-      handler: (response) => {
-        console.log(response);
-        alert("Payment Successful!");
+      order_id: response.order.id, // Generate order_id on server
+      handler: async (response) => {
+        const isValid = await handleVerifyCartOrder({
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature
+        });
+
+        if (isValid) {
+          navigate(`/order-success?order_id=${response?.razorpay_order_id}`);
+          handleGetCart();
+        } else {
+          alert("Payment verification failed. Please contact support.");
+        }
       },
       prefill: {
-        name: "John Doe",
-        email: "john.doe@example.com",
-        contact: "9999999999",
+        name: user?.fullname || "John Doe",
+        email: user?.email || "john.doe@example.com",
+        contact: user?.contact || "9999999999",
       },
       theme: {
-        color: "#F37254",
+        color: "#FFD000",
       },
     };
 
     const razorpayInstance = new Razorpay(options);
     razorpayInstance.open();
-  };
+  }
+
 
       
 
@@ -406,7 +426,6 @@ const CartItems = () => {
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <p
-                  onclick={handlePayment}
                   className="text-[11px] uppercase tracking-[0.3em] text-zinc-600 mb-2">
                     Checkout
                   </p>
@@ -518,7 +537,7 @@ const CartItems = () => {
 
               {/* BUTTON */}
               <button
-                onClick={handlePayment}
+                onClick={handleCheckout}
                 className="w-full h-14 rounded-2xl bg-[#FFD000] text-black font-black tracking-[0.2em] text-sm hover:scale-[1.01] active:scale-[0.99] transition-all"
               >
                 CHECKOUT

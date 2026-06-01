@@ -1,4 +1,4 @@
-import { addItem, getCart, updateItemQuantity, removeItem } from "../service/cart.api";
+import { addItem, getCart, updateItemQuantity, removeItem, createCartOrder, verifyCartOrder, getOrderDetails } from "../service/cart.api";
 import { useDispatch, useSelector } from "react-redux";
 import { setCart, setLoading, setError } from "../state/cart.slice";
 
@@ -28,6 +28,7 @@ export const useCart = () => {
             const data = await getCart();
             // data.cart is the cart object returned from server
             dispatch(setCart(data.cart));
+            console.log("Cart fetched:", data.cart);
             return data.cart;
         } catch (error) {
             dispatch(setError(error.message));
@@ -69,6 +70,47 @@ export const useCart = () => {
             dispatch(setLoading(false));
         }
     }
+    async function handleCreateCartOrder() {
+        dispatch(setLoading(true));
+        try {
+            const data = await createCartOrder();
+            return data;
+        } catch (error) {
+            dispatch(setError(error.message));
+            console.error("Error creating cart order:", error);
+            throw error;
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }
+
+    async function handleVerifyCartOrder({ razorpay_order_id, razorpay_payment_id, razorpay_signature }) {
+        dispatch(setLoading(true));
+        try {
+            const data = await verifyCartOrder({ razorpay_order_id, razorpay_payment_id, razorpay_signature });
+            return data.success;
+        } catch (error) {
+            dispatch(setError(error.message));
+            console.error("Error verifying cart order:", error);
+            throw error;
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }
+
+    async function handleGetOrderDetails(orderId) {
+        dispatch(setLoading(true));
+        try {
+            const data = await getOrderDetails(orderId);
+            return data.order;
+        } catch (error) {
+            dispatch(setError(error.message));
+            console.error("Error fetching order details:", error);
+            throw error;
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }
 
     return { 
         cart, 
@@ -77,6 +119,9 @@ export const useCart = () => {
         handleAddItem, 
         handleGetCart, 
         handleUpdateItemQuantity, 
-        handleRemoveItem 
+        handleRemoveItem,
+        handleCreateCartOrder,
+        handleVerifyCartOrder,
+        handleGetOrderDetails
     };
 }
