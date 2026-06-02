@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
 import { useProduct } from '../hook/useProduct';
+import {useWishlist} from "../../wishlist/hook/useWishlist.js";
 
 const currencySymbols = {
   USD: '$',
@@ -14,6 +15,7 @@ const currencySymbols = {
 
 const ProductsDashboard = () => {
   const { handleGetAllProducts } = useProduct();
+  const { handleAddToWishlist } = useWishlist();
   const navigate = useNavigate();
 
   const { allProducts = [], loading } = useSelector(
@@ -22,6 +24,17 @@ const ProductsDashboard = () => {
 
   const [search, setSearch] = useState('');
   const [currentImages, setCurrentImages] = useState({});
+
+  const handleWishlistClick = async (event, product) => {
+    event.stopPropagation();
+
+    const variantId = product?.variants?.[0]?._id;
+
+    await handleAddToWishlist({
+      productId: product._id,
+      variantId,
+    });
+  };
 
   useEffect(() => {
     handleGetAllProducts();
@@ -250,9 +263,8 @@ const ProductsDashboard = () => {
                       </div>
 
                       <button
-                        onClick={(e) =>
-                          e.stopPropagation()
-                        }
+                        type="button"
+                        onClick={(e) => handleWishlistClick(e, product)}
                         className="w-9 h-9 rounded-full border border-[#242424] flex items-center justify-center text-sm hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300"
                       >
                         ♥
