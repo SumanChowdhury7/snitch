@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { useCart } from "../hook/useCart";
 import { useRazorpay } from "react-razorpay";
 import { useSelector } from "react-redux";
+import Addresses from "../../address/pages/Addresses.jsx";
 
 const currencySymbols = {
   USD: "$",
@@ -33,6 +34,7 @@ const CartItems = () => {
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [promoError, setPromoError] = useState("");
+  const [showAddressModal, setShowAddressModal] = useState(false);
 
   const cartData = Array.isArray(cart) ? cart[0] : cart;
   const cartItems = cartData?.items || [];
@@ -41,17 +43,19 @@ const CartItems = () => {
     handleGetCart();
   }, []);
 
-  async function handleCheckout() {
+  // Called when user selects an address from the modal and clicks Proceed to Pay
+  async function handleCheckout(selectedAddress) {
+    setShowAddressModal(false);
     const response = await handleCreateCartOrder();
     console.log("Order created:", response);
 
-     const options = {
+    const options = {
       key: "rzp_test_Svzie5lDpUqdyi",
-      amount: response.order.amount, // Amount in paise
+      amount: response.order.amount,
       currency: response.order.currency,
       name: "Snitch",
       description: "Test Transaction",
-      order_id: response.order.id, // Generate order_id on server
+      order_id: response.order.id,
       handler: async (response) => {
         const isValid = await handleVerifyCartOrder({
           razorpay_order_id: response.razorpay_order_id,
@@ -67,9 +71,14 @@ const CartItems = () => {
         }
       },
       prefill: {
-        name: user?.fullname || "John Doe",
+        name: selectedAddress?.name || user?.fullname || "John Doe",
         email: user?.email || "john.doe@example.com",
-        contact: user?.contact || "9999999999",
+        contact: selectedAddress?.phone || user?.contact || "9999999999",
+      },
+      notes: {
+        shipping_address: selectedAddress
+          ? `${selectedAddress.addressLine1}${selectedAddress.addressLine2 ? ', ' + selectedAddress.addressLine2 : ''}, ${selectedAddress.city}, ${selectedAddress.state} - ${selectedAddress.postalCode}`
+          : "",
       },
       theme: {
         color: "#FFD000",
@@ -537,8 +546,8 @@ const CartItems = () => {
 
               {/* BUTTON */}
               <button
-                onClick={handleCheckout}
-                className="w-full h-14 rounded-2xl bg-[#FFD000] text-black font-black tracking-[0.2em] text-sm hover:scale-[1.01] active:scale-[0.99] transition-all"
+                onClick={() => setShowAddressModal(true)}
+                className="w-full h-14 rounded-2xl bg-[#FFD000] text-black font-black tracking-[0.2em] text-sm hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
               >
                 CHECKOUT
               </button>
@@ -555,6 +564,15 @@ const CartItems = () => {
       <footer className="border-t border-white/5 py-7 text-center text-xs text-zinc-600">
         © {new Date().getFullYear()} SNITCH Premium Retail
       </footer>
+
+      {/* ADDRESS SELECTION MODAL */}
+      {showAddressModal && (
+        <Addresses
+          isModal={true}
+          onClose={() => setShowAddressModal(false)}
+          onSelectAddress={(selectedAddress) => handleCheckout(selectedAddress)}
+        />
+      )}
     </div>
   );
 };

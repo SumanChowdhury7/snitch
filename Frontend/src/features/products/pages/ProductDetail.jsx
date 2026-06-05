@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
 import { useProduct } from '../hook/useProduct';
 import { useCart } from '../../cart/hook/useCart';
+import { useWishlist } from '../../wishlist/hook/useWishlist.js';
 
 const currencySymbols = {
   USD: '$',
@@ -32,6 +33,44 @@ const ProductDetail = () => {
 
   const { handleGetProductDetails } = useProduct();
   const { handleAddItem } = useCart();
+  const { wishlist, handleAddToWishlist, handleGetWishlist, handleRemoveFromWishlist } = useWishlist();
+
+  const isInWishlist = () => {
+    return wishlist?.items?.some(
+      (item) =>
+        item.product?._id?.toString() === product?._id?.toString() ||
+        item.product?.toString() === product?._id?.toString()
+    );
+  };
+
+  const handleWishlistClick = async () => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    try {
+      const inWishlist = isInWishlist();
+      const itemInWishlist = wishlist?.items?.find(
+        (item) =>
+          item.product?._id?.toString() === product._id.toString() ||
+          item.product?.toString() === product._id.toString()
+      );
+
+      if (inWishlist) {
+        await handleRemoveFromWishlist({
+          productId: product._id,
+          variantId: itemInWishlist?.variant,
+        });
+      } else {
+        await handleAddToWishlist({
+          productId: product._id,
+          variantId: selectedVariant?._id,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update wishlist:', error);
+    }
+  };
 
   const handleAddToCart = async () => {
     if (!user) {
@@ -66,6 +105,12 @@ const ProductDetail = () => {
   useEffect(() => {
     fetchProductDetails();
   }, [ProductId]);
+
+  useEffect(() => {
+    if (user) {
+      handleGetWishlist();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (product?.variants?.length > 0) {
@@ -374,7 +419,14 @@ const ProductDetail = () => {
                 Add To Cart
               </button>
 
-              <button className="h-14 px-8 rounded-2xl border border-[#2a2a2a] hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300 cursor-pointer">
+              <button
+                onClick={handleWishlistClick}
+                className={`h-14 px-8 rounded-2xl border transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 ${
+                  isInWishlist()
+                    ? 'border-red-500 bg-red-500 text-white shadow-lg shadow-red-500/20'
+                    : 'border-[#2a2a2a] hover:border-[#FFD000] hover:text-[#FFD000]'
+                }`}
+              >
                 ♥ Wishlist
               </button>
 

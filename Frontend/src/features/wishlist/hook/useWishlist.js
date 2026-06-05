@@ -1,4 +1,4 @@
-import {addToWishlist} from "../service/wishlist.api.js";
+import { addToWishlist, getWishlist, removeFromWishlist } from "../service/wishlist.api.js";
 
 import {setWishlist, setLoading, setError} from "../state/wishlist.slice.js";
 import {useDispatch, useSelector} from "react-redux";
@@ -33,5 +33,18 @@ export const useWishlist = () => {
         }
     }
 
-    return { wishlist, loading, error, handleAddToWishlist, handleGetWishlist };
+    async function handleRemoveFromWishlist({productId, variantId}) {
+        dispatch(setLoading(true));
+        try {
+            const data = await removeFromWishlist({productId, variantId});
+            dispatch(setWishlist(data.wishList));
+            return data.wishList;
+        } catch (error) {
+            dispatch(setError(error.message));
+        } finally {
+            dispatch(setLoading(false));
+        }
+    }
+
+    return { wishlist, loading, error, handleAddToWishlist, handleGetWishlist, handleRemoveFromWishlist };
 };

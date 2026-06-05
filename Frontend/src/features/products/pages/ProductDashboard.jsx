@@ -15,8 +15,9 @@ const currencySymbols = {
 
 const ProductsDashboard = () => {
   const { handleGetAllProducts } = useProduct();
-  const { handleAddToWishlist } = useWishlist();
+  const { wishlist, handleAddToWishlist, handleGetWishlist, handleRemoveFromWishlist } = useWishlist();
   const navigate = useNavigate();
+  const user = useSelector((state) => state.auth.user);
 
   const { allProducts = [], loading } = useSelector(
     (state) => state.product
@@ -25,20 +26,48 @@ const ProductsDashboard = () => {
   const [search, setSearch] = useState('');
   const [currentImages, setCurrentImages] = useState({});
 
+  const isInWishlist = (productId) => {
+    return wishlist?.items?.some(
+      (item) =>
+        item.product?._id?.toString() === productId.toString() ||
+        item.product?.toString() === productId.toString()
+    );
+  };
+
   const handleWishlistClick = async (event, product) => {
     event.stopPropagation();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
 
-    const variantId = product?.variants?.[0]?._id;
+    const inWishlist = isInWishlist(product._id);
+    const itemInWishlist = wishlist?.items?.find(
+      (item) =>
+        item.product?._id?.toString() === product._id.toString() ||
+        item.product?.toString() === product._id.toString()
+    );
 
-    await handleAddToWishlist({
-      productId: product._id,
-      variantId,
-    });
+    if (inWishlist) {
+      await handleRemoveFromWishlist({
+        productId: product._id,
+        variantId: itemInWishlist?.variant,
+      });
+    } else {
+      const variantId = product?.variants?.[0]?._id;
+      await handleAddToWishlist({
+        productId: product._id,
+        variantId,
+      });
+    }
   };
 
   useEffect(() => {
     handleGetAllProducts();
-  }, []);
+    if (user) {
+      handleGetWishlist();
+    }
+  }, [user]);
 
   // FILTER
   const filteredProducts = allProducts.filter((product) =>
@@ -265,7 +294,11 @@ const ProductsDashboard = () => {
                       <button
                         type="button"
                         onClick={(e) => handleWishlistClick(e, product)}
-                        className="w-9 h-9 rounded-full border border-[#242424] flex items-center justify-center text-sm hover:border-[#FFD000] hover:text-[#FFD000] transition-all duration-300"
+                        className={`w-9 h-9 rounded-full border flex items-center justify-center text-sm transition-all duration-300 cursor-pointer ${
+                          isInWishlist(product._id)
+                            ? 'border-red-500 bg-red-500 text-white shadow-lg shadow-red-500/20'
+                            : 'border-[#242424] text-white hover:border-[#FFD000] hover:text-[#FFD000]'
+                        }`}
                       >
                         ♥
                       </button>

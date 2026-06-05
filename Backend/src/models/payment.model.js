@@ -32,7 +32,6 @@ const paymentSchema = new mongoose.Schema({
             price: priceSchema,
         }
     ]
-    
 });
 
 const paymentModel = mongoose.model("payment", paymentSchema);
